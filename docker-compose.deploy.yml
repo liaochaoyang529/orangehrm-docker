@@ -1,0 +1,38 @@
+services:
+  app:
+    image: orangehrm-deploy:latest
+    container_name: orangehrm-app
+    ports:
+      - "8080:80"
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/web
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - orangehrm-net
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.6
+    container_name: orangehrm-db
+    environment:
+      MYSQL_ROOT_PASSWORD: orangehrm_root
+      MYSQL_DATABASE: orangehrm
+    volumes:
+      - orangehrm-db-data:/var/lib/mysql
+    networks:
+      - orangehrm-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  orangehrm-db-data:
+
+networks:
+  orangehrm-net:
+    driver: bridge
